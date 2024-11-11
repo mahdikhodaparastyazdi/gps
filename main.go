@@ -34,9 +34,7 @@ const (
 
 // Message handler for MQTT
 func messageHandler(client mqtt.Client, msg mqtt.Message) {
-	// Parse the message payload
 	payload := string(msg.Payload())
-	// Assuming payload format is: "user_id,latitude,longitude" (e.g., "123,34.052235,-118.243683")
 	data := strings.Split(payload, ",")
 	if len(data) < 5 {
 		log.Printf("Invalid payload format: %s", payload)
@@ -120,6 +118,9 @@ func hexToFloat64(hexStr string) (float64, error) {
 
 func serveHTML(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "index.html")
+}
+func serveHTMLHistory(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "history.html")
 }
 
 // Function to get the latest GPS data
@@ -216,6 +217,7 @@ func main() {
 	// Set up the HTTP handler
 	go connectAndSubscribe()
 	http.HandleFunc("/", serveHTML)
+	http.HandleFunc("/history", serveHTMLHistory)
 	http.HandleFunc("/last-location", getLastLocation)
 	http.HandleFunc("/location-history", getLocationHistory)
 

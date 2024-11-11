@@ -40,7 +40,7 @@
   // Function to fetch and display the last location
   async function fetchAndShowLastLocation() {
     try {
-      const response = await fetch("/last-location");
+      const response = await fetch("/map/last-location");
       if (!response.ok) {
         throw new Error("Failed to fetch location");
       }
@@ -49,15 +49,20 @@
       const { latitude, longitude } = data;
 
       // Remove the previous marker if it exists
-      if (lastMarker !== null) {
-        map.removeLayer(lastMarker);
+    if (lastMarker) {
+      const { lat, lng } = lastMarker.getLatLng();
+      if (lat === latitude && lng === longitude) {
+        // Skip if the location hasn't changed
+        return;
       }
+      // Remove previous marker
+      map.removeLayer(lastMarker);
+    }
 
       // Add a marker for the latest location
       lastMarker = L.marker([latitude, longitude]).addTo(map)
         .bindPopup("Last Location")
         .openPopup();
-
       // Center the map on the latest location
       map.setView([latitude, longitude], 14);
     } catch (error) {
