@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map with Directions and Progress</title>
+
+  <!-- Leaflet.js CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <!-- Leaflet.js JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <!-- Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+  <style>
+    #map {
+      height: 100vh;  /* Full height  map */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Loading Trip Points with Directions</h1>
+  <div id="map"></div>
+
+<script>
+  // Initialize the map centered on a default coordinate
+  const map = L.map('map').setView([35.7219, 51.3347], 14);
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18
+  }).addTo(map);
+
+  let lastMarker = null; // To store the last location marker
+
+  // Function to fetch and display the last location
+  async function fetchAndShowLastLocation() {
+    try {
+      const response = await fetch("/last-location");
+      if (!response.ok) {
+        throw new Error("Failed to fetch location");
+      }
+      const data = await response.json();
+
+      const { latitude, longitude } = data;
+
+      // Remove the previous marker if it exists
+      if (lastMarker !== null) {
+        map.removeLayer(lastMarker);
+      }
+
+      // Add a marker for the latest location
+      lastMarker = L.marker([latitude, longitude]).addTo(map)
+        .bindPopup("Last Location")
+        .openPopup();
+
+      // Center the map on the latest location
+      map.setView([latitude, longitude], 14);
+    } catch (error) {
+      console.error("Error fetching last location:", error);
+    }
+  }
+
+  // Fetch and show the latest location every 5 seconds
+  setInterval(fetchAndShowLastLocation, 5000);
+
+  // Initial fetch to display the location immediately
+  fetchAndShowLastLocation();
+</script>
+
+</body>
+</html>
