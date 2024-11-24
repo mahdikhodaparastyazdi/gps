@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fa">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <h1>تاریخچه مکان</h1>
@@ -32,6 +34,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
     let markers = [];
+    let path = []; // Array to hold the coordinates for the polyline
 
     // Fetch and animate locations from /location-history API
     async function fetchAndAnimateHistory() {
@@ -60,6 +63,12 @@
             .openPopup();
           markers.push(marker);
 
+          // Add the current location to the path
+          path.push([latitude, longitude]);
+
+          // Draw the polyline on the map
+          L.polyline(path, { color: 'blue', weight: 3 }).addTo(map);
+
           map.setView([latitude, longitude], 14);
 
           // Wait 500ms before moving to the next location
@@ -74,4 +83,5 @@
     fetchAndAnimateHistory();
   </script>
 </body>
+
 </html>

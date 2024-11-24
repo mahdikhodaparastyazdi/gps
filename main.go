@@ -48,7 +48,7 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 	// Convert the 4th value from hex to float64
 	lat, err := hexToFloat64(hexValue4)
 	if err != nil {
-		log.Printf("Error converting 4th value (%s) to float64: %v", hexValue4, err)
+		log.Printf("Error converting 4th value (%s) to float64: %w", hexValue4, err)
 		return
 	}
 
@@ -141,10 +141,16 @@ func getLastLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
 		return
 	}
+	response := map[string]float64{
+		"latitude":  latitude,
+		"longitude": longitude,
+	}
 
-	// Write the latest location as JSON
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"latitude": %f, "longitude": %f}`, latitude, longitude)
+	// Encode the response as JSON
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func getLocationHistory(w http.ResponseWriter, r *http.Request) {
@@ -217,9 +223,9 @@ func main() {
 	// Set up the HTTP handler
 	go connectAndSubscribe()
 	http.HandleFunc("/", serveHTML)
-	http.HandleFunc("/history", serveHTMLHistory)
-	http.HandleFunc("/last-location", getLastLocation)
-	http.HandleFunc("/location-history", getLocationHistory)
+	http.HandleFunc("/map/history", serveHTMLHistory)
+	http.HandleFunc("/map/last-location", getLastLocation)
+	http.HandleFunc("/map/location-history", getLocationHistory)
 
 	// Serve static files (CSS, JS, etc.)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
