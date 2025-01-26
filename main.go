@@ -34,6 +34,10 @@ const (
 
 // Message handler for MQTT
 func messageHandler(client mqtt.Client, msg mqtt.Message) {
+	location, err := time.LoadLocation("Asia/Tehran")
+	if err != nil {
+		return
+	}
 	payload := string(msg.Payload())
 	data := strings.Split(payload, ",")
 	if len(data) < 5 {
@@ -60,11 +64,11 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 	}
 
 	// Insert data into PostgreSQL
-	insertGPSData(lat, lon)
+	insertGPSData(lat, lon, location)
 }
 
 // Function to insert GPS data into PostgreSQL
-func insertGPSData(latitude, longitude float64) {
+func insertGPSData(latitude, longitude float64, loc *time.Location) {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err := sql.Open("postgres", connStr)
@@ -75,7 +79,7 @@ func insertGPSData(latitude, longitude float64) {
 
 	// Insert GPS data into the gps_location table
 	query := `INSERT INTO gps_location (user_id, latitude, longitude, timestamp) VALUES ($1, $2, $3, $4)`
-	_, err = db.Exec(query, 0, latitude, longitude, time.Now())
+	_, err = db.Exec(query, 0, latitude, longitude, time.Now().In(loc))
 	if err != nil {
 		log.Printf("Failed to insert data: %v", err)
 		return
